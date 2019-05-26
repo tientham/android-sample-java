@@ -1,0 +1,85 @@
+apply plugin: 'com.android.application'
+
+android {
+    def globalConfiguration = rootProject.extensions.getByName("ext")
+
+    compileSdkVersion globalConfiguration.getAt("androidCompileSdkVersion")
+    buildToolsVersion globalConfiguration.getAt("androidBuildToolsVersion")
+
+    defaultConfig {
+        minSdkVersion globalConfiguration.getAt("androidMinSdkVersion")
+        targetSdkVersion globalConfiguration.getAt("androidTargetSdkVersion")
+
+        applicationId globalConfiguration.getAt("androidApplicationId")
+        versionCode globalConfiguration.getAt("androidVersionCode")
+        versionName globalConfiguration.getAt("androidVersionName")
+        testInstrumentationRunner globalConfiguration.getAt("testInstrumentationRunner")
+        testApplicationId globalConfiguration.getAt("testApplicationId")
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    packagingOptions {
+        exclude 'LICENSE.txt'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+    }
+
+    lintOptions {
+        quiet true
+        abortOnError false
+        ignoreWarnings true
+        disable 'InvalidPackage'            //Some libraries have issues with this.
+        disable 'OldTargetApi'              //Lint gives this warning but SDK 20 would be Android L Beta.
+        disable 'IconDensities'             //For testing purpose. This is safe to remove.
+        disable 'IconMissingDensityFolder'  //For testing purpose. This is safe to remove.
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file('../buildsystem/debug.keystore')
+            storePassword 'test1234'
+            keyAlias 'test1234'
+            keyPassword 'test1234'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+    }
+}
+
+dependencies {
+    def appDependencies = rootProject.ext.appDependencies
+    def appTestDependencies = rootProject.ext.appTestDependencies
+    def developmentDependencies = rootProject.ext.developmentDependencies
+
+    implementation project(':data')
+    implementation project(':domain')
+
+    annotationProcessor appDependencies.daggerCompiler
+    implementation appDependencies.daggerCompiler
+    implementation appDependencies.dagger
+    annotationProcessor appDependencies.butterKnife
+    implementation appDependencies.butterKnife
+    implementation appDependencies.recyclerView
+    implementation appDependencies.rxJava
+    implementation appDependencies.rxAndroid
+    provided appDependencies.javaxAnnotation
+
+    androidTestImplementation appTestDependencies.mockito
+    androidTestImplementation appTestDependencies.dexmaker
+    androidTestImplementation appTestDependencies.dexmakerMockito
+    androidTestImplementation appTestDependencies.espresso
+    androidTestImplementation appTestDependencies.testingSupportLib
+
+    //Development
+    implementation developmentDependencies.leakCanary
+}
